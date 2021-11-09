@@ -19,7 +19,7 @@ endif
 
 RM = rm -rf
 DL = curl -Ls -f
-UNZIP = unzip 
+UNZIP = unzip
 
 LIB_LINK = https://www.himax.com.tw/we-i/himax_tflu_tree/third_party_lib_v03.zip
 LIB_LOC = third_party/
@@ -149,7 +149,7 @@ tensorflow/lite/micro/kernels/tanh.cc \
 tensorflow/lite/micro/kernels/transpose.cc \
 tensorflow/lite/micro/kernels/transpose_conv.cc \
 tensorflow/lite/micro/kernels/unpack.cc \
-tensorflow/lite/micro/kernels/zeros_like.cc 
+tensorflow/lite/micro/kernels/zeros_like.cc
 
 PD_SRCS := \
 tensorflow/lite/micro/kernels/arc_mli/scratch_buffers.cc \
@@ -160,6 +160,17 @@ tensorflow/lite/micro/examples/person_detection/himax_we1_evb/image_provider.cc 
 tensorflow/lite/micro/examples/person_detection/main.cc \
 tensorflow/lite/micro/examples/person_detection/main_functions.cc \
 tensorflow/lite/micro/examples/person_detection/model_settings.cc \
+tensorflow/lite/micro/tools/make/downloads/person_model_int8/person_detect_model_data.cc
+
+PD_I2C_SRCS := \
+tensorflow/lite/micro/kernels/arc_mli/scratch_buffers.cc \
+tensorflow/lite/micro/kernels/arc_mli/scratch_buf_mgr.cc \
+tensorflow/lite/micro/kernels/arc_mli/mli_slicers.cc \
+tensorflow/lite/micro/examples/person_detection_i2c/himax_we1_evb/detection_responder.cc \
+tensorflow/lite/micro/examples/person_detection_i2c/himax_we1_evb/image_provider.cc \
+tensorflow/lite/micro/examples/person_detection_i2c/main.cc \
+tensorflow/lite/micro/examples/person_detection_i2c/main_functions.cc \
+tensorflow/lite/micro/examples/person_detection_i2c/model_settings.cc \
 tensorflow/lite/micro/tools/make/downloads/person_model_int8/person_detect_model_data.cc
 
 MW_SRCS := \
@@ -224,6 +235,9 @@ $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(SRCS)))
 
 PD_OBJS := \
 $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(PD_SRCS)))
+
+PD_I2C_OBJS := \
+$(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(PD_I2C_SRCS)))
 
 MW_OBJS := \
 $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(MW_SRCS)))
@@ -441,7 +455,7 @@ endif # ARC_TOOLCHAIN
 #=============================================================
 # Common rules
 #=============================================================
-.PHONY: all person_detection_int8 magic_wand micro_speech
+.PHONY: all person_detection_int8 person_detection_i2c magic_wand micro_speech
 
 %.o: %.cc
 	$(CXX) $(CXXFLAGS) $(EXT_CFLAGS) $(INCLUDES) -c $< -o $@
@@ -453,57 +467,63 @@ endif # ARC_TOOLCHAIN
 #=================================================================
 # Global rules
 #=================================================================
-all: 
+all:
 	$(error "please specific example=")
 
 person_detection_int8: MAP_NAME = person_detection_int8
 person_detection_int8: person_detection_int8.elf
 
+person_detection_i2c: MAP_NAME = person_detection_i2c
+person_detection_i2c: person_detection_i2c.elf
+
 micro_speech: MAP_NAME = micro_speech
 micro_speech: micro_speech.elf
 
 magic_wand: MAP_NAME = magic_wand
-magic_wand: magic_wand.elf 
+magic_wand: magic_wand.elf
 
 handwriting: MAP_NAME = handwriting
 handwriting: handwriting.elf
 
-person_detection_int8.elf : $(OBJS) $(PD_OBJS) 
+person_detection_int8.elf : $(OBJS) $(PD_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(PD_OBJS) $(LDFLAGS)
+
+person_detection_i2c.elf : $(OBJS) $(PD_I2C_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(PD_I2C_OBJS) $(LDFLAGS)
 
 micro_speech.elf : $(OBJS) $(MS_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(MS_OBJS) $(LDFLAGS)
-	
+
 magic_wand.elf : $(OBJS) $(MW_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(MW_OBJS) $(LDFLAGS)
 
 handwriting.elf : $(OBJS) $(HW_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(HW_OBJS) $(LDFLAGS)
-		
+
 clean:
 	@echo 'cleaning'
 	-@$(RM) $(OBJS) $(PD_OBJS) $(MW_OBJS) $(MS_OBJS) $(HW_OBJS)
 	-@$(RM) *.elf
 	-@$(RM) *.map
-	
+
 download: $(MODEL_LOC)
 	@echo 'downloading'
-	@$(DL) $(LIB_LINK)  -o $(LIB_NAME)  
+	@$(DL) $(LIB_LINK)  -o $(LIB_NAME)
 	@$(DL) $(MODEL_LINK)  -o $(MODEL_NAME)
 	@$(DL) $(SDK_LINK)  -o $(SDK_NAME)
 	@$(DL) $(TOOL_LINK)  -o $(TOOL_NAME)
 	@$(DL) $(DEPEND_LINK)  -o $(DEPEND_NAME)
 	@$(UNZIP) -o $(LIB_NAME) -d $(LIB_LOC)
 	@$(UNZIP) -o $(MODEL_NAME) -d $(MODEL_LOC)
-	@$(UNZIP) -o $(SDK_NAME) -d $(SDK_LOC) 
-	@$(UNZIP) -o $(TOOL_NAME) -d $(TOOL_LOC)	
+	@$(UNZIP) -o $(SDK_NAME) -d $(SDK_LOC)
+	@$(UNZIP) -o $(TOOL_NAME) -d $(TOOL_LOC)
 	@$(UNZIP) -o $(DEPEND_NAME) -d $(DEPEND_LOC)
 	@$(RM) $(LIB_NAME)
 	@$(RM) $(MODEL_NAME)
 	@$(RM) $(SDK_NAME)
-	@$(RM) $(TOOL_NAME)	
+	@$(RM) $(TOOL_NAME)
 	@$(RM) $(DEPEND_NAME)
-	
+
 $(MODEL_LOC):
 	@mkdir -p $@
 
@@ -532,4 +552,4 @@ else
 	$(error "please specific example=")
 endif
 
-endif 	
+endif
