@@ -40,6 +40,12 @@ hx_drv_gpio_config_t gpio_config = {
   .gpio_direction = HX_DRV_GPIO_OUTPUT,
 };
 
+static hx_drv_gpio_config_t gpio_spi_csn_config = {
+  .gpio_pin = HX_DRV_PGPIO_2,
+  .gpio_data = 1,
+  .gpio_direction = HX_DRV_GPIO_OUTPUT,
+};
+
 // In order to use optimized tensorflow lite kernels, a signed int8_t quantized
 // model is preferred over the legacy unsigned model format. This means that
 // throughout this project, input images must be converted from unisgned to
@@ -110,11 +116,14 @@ void setup() {
   // Get information about the memory area to use for the model's input.
   input = interpreter->input(0);
 
-  // configure I2C pins to use I2C
-  TF_LITE_REPORT_ERROR(error_reporter, "I2C init: %d", hx_drv_share_switch(SHARE_MODE_I2CM));
+  // configure SPI/I2C pins to use I2C
+  //TF_LITE_REPORT_ERROR(error_reporter, "I2C init: %d", hx_drv_share_switch(SHARE_MODE_I2CM));
+  //TF_LITE_REPORT_ERROR(error_reporter, "SPI pin init: %d", hx_drv_share_switch(SHARE_MODE_SPIM));
+  TF_LITE_REPORT_ERROR(error_reporter, "spi init error: %d", hx_drv_spim_init());
 
   // initialize gpio for timing
-  hx_drv_gpio_initial(&gpio_config);
+  //hx_drv_gpio_initial(&gpio_config);
+  //hx_drv_gpio_initial(&gpio_spi_csn_config);
 }
 
 // The name of this function is important for Arduino compatibility.
@@ -126,8 +135,8 @@ void loop() {
   }
 
   // set gpio to 1
-  gpio_config.gpio_data = 1;
-  hx_drv_gpio_set(&gpio_config);
+  //gpio_config.gpio_data = 1;
+  //hx_drv_gpio_set(&gpio_config);
 
   // Run the model on this input and make sure it succeeds.
   if (kTfLiteOk != interpreter->Invoke()) {
@@ -135,8 +144,8 @@ void loop() {
   }
 
   // set gpio to 0
-  gpio_config.gpio_data = 0;
-  hx_drv_gpio_set(&gpio_config);
+  //gpio_config.gpio_data = 0;
+  //hx_drv_gpio_set(&gpio_config);
 
   TfLiteTensor* output = interpreter->output(0);
 

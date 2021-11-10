@@ -24,6 +24,11 @@ limitations under the License.
 #include "hx_drv_tflm.h"  // NOLINT
 
 extern hx_drv_sensor_image_config_t g_pimg_config;
+static hx_drv_gpio_config_t gpio_spi_csn_config = {
+  .gpio_pin = HX_DRV_PGPIO_2,
+  .gpio_data = 1,
+  .gpio_direction = HX_DRV_GPIO_OUTPUT,
+};
 
 unsigned int crc32b(uint8_t * data, size_t len) {
    int j;
@@ -56,27 +61,33 @@ void RespondToDetection(tflite::ErrorReporter* error_reporter,
 
   TF_LITE_REPORT_ERROR(error_reporter, "person score:%d no person score %d",
                        person_score, no_person_score);
-  TF_LITE_REPORT_ERROR(error_reporter, "jpeg addr: %x jpeg size %d", (uint8_t*) g_pimg_config.jpeg_address, g_pimg_config.jpeg_size);
 
 
   if (person_thresh) {
     uint32_t crc = crc32b((uint8_t *) g_pimg_config.jpeg_address, g_pimg_config.jpeg_size);
     TF_LITE_REPORT_ERROR(error_reporter, "crc: %x", crc);
+    //gpio_spi_csn_config.gpio_data = 0;
+    //hx_drv_gpio_set(&gpio_spi_csn_config);
+    TF_LITE_REPORT_ERROR(error_reporter, "jpeg addr: %x jpeg size %d", (uint8_t*) g_pimg_config.jpeg_address, g_pimg_config.jpeg_size);
+    HX_DRV_ERROR_E e = hx_drv_spim_send(g_pimg_config.jpeg_address, 32, SPI_TYPE_JPG);
+    TF_LITE_REPORT_ERROR(error_reporter, "spi error: %d", e);
+    //gpio_spi_csn_config.gpio_data = 1;
+    //hx_drv_gpio_set(&gpio_spi_csn_config);
 
-#define HX_I2C_MTU 128
-    uint8_t addr = 0x57;
-    HX_DRV_ERROR_E e = hx_drv_i2cm_set_data(120, &addr, 1, (uint8_t*) &g_pimg_config.jpeg_size, sizeof(g_pimg_config.jpeg_size));
-    for (size_t i = 0; i < g_pimg_config.jpeg_size; i+=HX_I2C_MTU) {
-      size_t len = HX_I2C_MTU;
-      if (g_pimg_config.jpeg_size - i < HX_I2C_MTU) {
-        len = g_pimg_config.jpeg_size - i;
-      }
-      addr = 0x58;
-      e = hx_drv_i2cm_set_data(120, &addr, 1, (uint8_t *) g_pimg_config.jpeg_address + i, len);
-      if (e) {
-        TF_LITE_REPORT_ERROR(error_reporter, "i2c error jpeg: %d", e);
-      }
-    }
+//#define HX_I2C_MTU 128
+    //uint8_t addr = 0x57;
+    //HX_DRV_ERROR_E e = hx_drv_i2cm_set_data(120, &addr, 1, (uint8_t*) &g_pimg_config.jpeg_size, sizeof(g_pimg_config.jpeg_size));
+    //for (size_t i = 0; i < g_pimg_config.jpeg_size; i+=HX_I2C_MTU) {
+    //  size_t len = HX_I2C_MTU;
+    //  if (g_pimg_config.jpeg_size - i < HX_I2C_MTU) {
+    //    len = g_pimg_config.jpeg_size - i;
+    //  }
+    //  addr = 0x58;
+    //  e = hx_drv_i2cm_set_data(120, &addr, 1, (uint8_t *) g_pimg_config.jpeg_address + i, len);
+    //  if (e) {
+    //    TF_LITE_REPORT_ERROR(error_reporter, "i2c error jpeg: %d", e);
+    //  }
+    //}
     //HX_DRV_ERROR_E e = hx_drv_i2cm_set_data(120, 0x00, 0, g_pimg_config.jpeg_address, 128);
     //e = hx_drv_i2cm_set_data(120, 0x01, 0, &no_person_score, 1);
     //TF_LITE_REPORT_ERROR(error_reporter, "i2c error nps: %d", e);
