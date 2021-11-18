@@ -19,10 +19,10 @@ limitations under the License.
 
 #ifndef ARDUINO_EXCLUDE_CODE
 
-#include "tensorflow/lite/micro/examples/person_detection/image_provider.h"
+#include "tensorflow/lite/micro/examples/person_detection_i2c/image_provider.h"
 
 #include "hx_drv_tflm.h"  // NOLINT
-#include "tensorflow/lite/micro/examples/person_detection/model_settings.h"
+#include "tensorflow/lite/micro/examples/person_detection_i2c/model_settings.h"
 
 hx_drv_sensor_image_config_t g_pimg_config;
 

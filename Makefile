@@ -171,7 +171,8 @@ tensorflow/lite/micro/examples/person_detection_i2c/himax_we1_evb/image_provider
 tensorflow/lite/micro/examples/person_detection_i2c/main.cc \
 tensorflow/lite/micro/examples/person_detection_i2c/main_functions.cc \
 tensorflow/lite/micro/examples/person_detection_i2c/model_settings.cc \
-tensorflow/lite/micro/tools/make/downloads/person_model_int8/person_detect_model_data.cc
+tensorflow/lite/micro/tools/make/downloads/person_yolo_model/yolo_himax_data.cc
+#tensorflow/lite/micro/tools/make/downloads/person_model_int8/person_detect_model_data.cc \
 
 MW_SRCS := \
 tensorflow/lite/micro/kernels/arc_mli/scratch_buffers.cc \
@@ -553,3 +554,5 @@ else
 endif
 
 endif
+
+print-%  : ; @echo $* = $($*)

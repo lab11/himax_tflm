@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "tensorflow/lite/micro/examples/person_detection/main_functions.h"
+#include "tensorflow/lite/micro/examples/person_detection_i2c/main_functions.h"
 
-#include "tensorflow/lite/micro/examples/person_detection/detection_responder.h"
-#include "tensorflow/lite/micro/examples/person_detection/image_provider.h"
-#include "tensorflow/lite/micro/examples/person_detection/model_settings.h"
-#include "tensorflow/lite/micro/examples/person_detection/person_detect_model_data.h"
+#include "tensorflow/lite/micro/examples/person_detection_i2c/detection_responder.h"
+#include "tensorflow/lite/micro/examples/person_detection_i2c/image_provider.h"
+#include "tensorflow/lite/micro/examples/person_detection_i2c/model_settings.h"
+#include "tensorflow/lite/micro/examples/person_detection_i2c/person_detect_model_data.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
@@ -70,7 +70,7 @@ void setup() {
 
   // Map the model into a usable data structure. This doesn't involve any
   // copying or parsing, it's a very lightweight operation.
-  model = tflite::GetModel(g_person_detect_model_data);
+  model = tflite::GetModel(yolo_fastest_1_1_160_person_himax_tflite);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     TF_LITE_REPORT_ERROR(error_reporter,
                          "Model provided is schema version %d not equal "
@@ -139,9 +139,11 @@ void loop() {
   hx_drv_gpio_set(&gpio_config);
 
   TfLiteTensor* output = interpreter->output(0);
+  TF_LITE_REPORT_ERROR(error_reporter, "output dims: %d", output->dims->size);
+
 
   // Process the inference results.
-  int8_t person_score = output->data.uint8[kPersonIndex];
-  int8_t no_person_score = output->data.uint8[kNotAPersonIndex];
-  RespondToDetection(error_reporter, person_score, no_person_score);
+  //int8_t person_score = output->data.uint8[kPersonIndex];
+  //int8_t no_person_score = output->data.uint8[kNotAPersonIndex];
+  //RespondToDetection(error_reporter, person_score, no_person_score);
 }
